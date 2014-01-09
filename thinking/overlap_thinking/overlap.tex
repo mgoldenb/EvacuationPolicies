@@ -1,0 +1,139 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amsfonts, amsthm, amssymb, relsize}
+\usepackage{url}
+\usepackage[left=2cm,right=2cm,top=2cm, bottom=2cm]{geometry}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+
+\newcommand{\MEMO}[1]
+{
+\smallskip
+\noindent
+\begin{center}
+\fbox{
+\begin{minipage}[b]{14cm}
+#1
+\end{minipage}
+} 
+\end{center}
+\smallskip
+}
+
+\newtheorem{open}{Open Question}
+\newcommand{\QQ}[1]
+{\MEMO{\begin{open}{\em #1}\end{open}}}
+\newcommand{\Q}[1]{\begin{open}{\em #1}\end{open}}
+
+\newtheorem{invar}{Invariant}
+\newcommand{\I}[1]{\begin{invar}{\em #1}\end{invar}}
+
+\newtheorem{fix}{Fix}
+\newcommand{\F}[1]{\begin{fix}{\em #1}\end{fix}}
+
+\newtheorem{lemma}{Lemma}
+\newcommand{\Le}[1]{\begin{lemma}{\em #1}\end{lemma}}
+
+
+\newtheorem{comment}{Comment}
+\newcommand{\CC}[2]
+{\MEMO{\begin{comment}{\em #1 says: #2}\end{comment}}}
+
+
+\begin{document}\sloppy
+\LARGE
+\begin{center}
+From Maximum Network Flow to Evacuation With a Time Limit
+
+\end{center}
+\normalsize
+
+\section{The Problem}
+Given a plan obtained by solving the maximum flow problem on the time-expanded graph that saves agents from the set of saved agents $S$ in $T$ time steps while ignoring the presence of the agents $a\notin S$, we would like to produce a plan for {\em all} agents that saves $|S|$ agents. The identities of the saved agents may differ from the agents that were initially chosen to be saved by the maximum flow. 
+
+\section{The Solution}
+First, we append the plan produced by the maximum flow by a plan for the non-saved agents, whereby these agents occupy their initial locations until the evacuation time ($T$) expires. Obviously, this plan is not guaranteed to be without conflicts. In the following, we will modify this plan, while all the time preserving several invariants. 
+
+Whenever no confusion results, we will use a short form and write "$a$ arrived at/occupied $u$ at $t$" instead of "an agent $a$ arrived at/occupied the location $u$ at a time $t$". We write "$a$ occupies $u$ till $\infty$" instead of "$a$ occupies $u$ until the evacuation time expires". We write "till $t$" instead of "until and including the time $t$".
+
+\I{A conflict always involves a non-saved agent $a\notin S$ and a saved agent $b\in S$. \label{mixedConflicts}}
+
+Whenever an agent $c\notin S$ is in conflict with an agent $d\in S$, we will say that $c$ is {\em in the role} of $a$ and $d$ is {\em in the role} of $b$ in the conflict.
+
+\I{All conflicts between agents are of the form: $a(\notin S)$ occupies $u$ from $t_a$ till $\infty$, $b(\in S)$ occupies $u$ from $t_b$ till $t_b+\Delta t_b$, such that $t_b\ge t_a$. We denote the location of $b$ at $t_b-1$ by $v(\neq u)$.\label{cf}}
+
+\vspace{0.5cm}
+
+Consider a conflict with the {\em smallest value} of $t_b$. We {\em fix} the plans of $a$ and $b$:
+\F{$a$ takes the place of $b$ in $S$, while $b$ is excluded from $S$, as follows:
+\begin{enumerate}
+\item $a$ follows its original plan until $t_b+\Delta t_b$. From $t_b+\Delta t_b+1$ onwards, $a$ follows the original plan of $b$. 
+\item $b$ follows its original plan until $t_b-1$. From $t_b-1$ onwards, agent $b$ occupies $v$.
+\end{enumerate} \label{fix1}} 
+
+Consider the last conflict in which an agent $a$ participated and to which a fix was applied. We refer to the plan of $a$ after the fix by "the {\em plan} of $a$". We refer to the plan of $a$ before the fix by "the {\em original plan} of $a$". We refer to the plan of $a$ before any fix was ever applied to it by "the {\em initial plan} of $a$". 
+
+We now establish the central property of Fix~\ref{fix1}, which gives rise to our algorithm:
+
+\Le{If a new conflict is introduced by applying Fix~\ref{fix1}, then Invariants~\ref{mixedConflicts} and \ref{cf} remain preserved and the new conflict possesses $t_b$ that is at least as large as $t_b$ of the conflict to which the fix was applied.\label{l1}}
+\begin{proof}
+We prove this lemma by induction. Before any fix is applied, Invariants~\ref{mixedConflicts} and \ref{cf} trivially hold. Suppose that $k\ge 0$ fixes have been applied without breaking Invariants~\ref{mixedConflicts} and \ref{cf} (whenever we base the argument on Invariants~\ref{mixedConflicts} and \ref{cf} further in the proof, we use this induction step). We show that the $(k+1)$-st fix does not break these invariants either.
+ 
+Since Fix~\ref{fix1} affects the plans of only two agents, any new conflict introduced by this fix must involve at least one of these agents. Let us consider the possible cases for such conflicts:
+\begin{enumerate}
+\item {\bf Conflicts between $a$ and $b$}. Due to minimality of $t_b$ and the fact that both $a$ and $b$ follow their original plans until $t_b-1$, no conflicts are possible till $t_b-1$. 
+
+There is no conflict from $t_b$ till $t_b+\Delta t_b$, since during that period $a$ still follows its original plan and is at $u$ (since $t_a\le t_b$), while $b$ is at $v$. 
+
+Hence, any possible conflict between these agents occurs at a time after $t_b+\Delta t_b$ when $a$ leaves $u$ and can arrive at $v$. Such a conflict complies with Invariant \ref{cf}, where $a$ is in the role of $b$ and $b$ is in the role of $a$. Invariant \ref{mixedConflicts} is preserved, since $a\in S$ and $b\notin S$.
+  
+\item {\bf Conflicts between $b$ and agents other than $a$}. Due to the minimality of $t_b$, $b$ cannot be in conflict with any non-saved agent till $t_b-1$.
+
+$b$ cannot be in conflict with any non-saved agent even after $t_b-1$. Suppose that, on the contrary, $b$ is in conflict with a non-saved agent $c$ at $t_b$ or later. Since $b$ occupies $v$ at $t_b$, the conflict is at $v$. Note that $c$ cannot be following its initial plan, since, in that case, $c$ would be at $v$ at $t_b-1$ and conflict with the original plan of $b$ at that time, which would contradict the minimality of $t_b$. Hence, $c$ must have received the plan to occupy $v$ at $t_b$ by means of a fix. For that fix, $c$ was in the role of $b$ and $t_b$ was either the same or smaller than $t_b$ of the current conflict. This means that, from $t_b-1$ till $\infty$, $c$ occupies $v$. However, this again means that that the original plan of $b$ was in conflict with $c$ at $t_b-1$, which contradicts the minimality of $t_b$. This completes the proof that $b$ cannot be in conflict with any non-saved agent.  
+
+Due to Invariant~\ref{mixedConflicts}, $b$ cannot be in conflict with any saved agent until and including $t_b-1$. 
+
+$b$ {\em can} be in conflict with a saved agent $c$ at time $t_b$ or later. Since $b$ used to be saved, according to Invariant~\ref{mixedConflicts}, $c$ could not occupy $v$ at $t_b-1$. Hence, this conflict complies with Invariant~\ref{cf}, where $b$ is in the role of $a$ and $c$ is in the role of $b$. Since $c\in S$ and $b\notin S$, Invariant~\ref{mixedConflicts} is respected.
+ 
+\item {\bf Conflicts between $a$ and agents other than $b$}. Since $a$ follows its original plan till $t_b+\Delta t_b$, according to Invariant~\ref{mixedConflicts}, it cannot be in conflict with any non-saved agent until that time. 
+
+$a$ cannot be in conflict with any saved agent till $t_b-1$ due to minimality of $t_b$. 
+
+From $t_b$ onwards, $a$ follows the original plan of $b$. According to Invariant~\ref{mixedConflicts} $a$ cannot be in conflict with any saved agent after $t_b-1$. 
+
+$a$ {\em can} be in conflict with a non-saved agent $c$ after $t_b+\Delta t_b$. Such a conflict must comply with Invariant~\ref{cf}, since the original plan of $b$ was in conflict with $c$ at the same time. 
+\end{enumerate}
+\end{proof}
+
+The above proof established the possible new conflicts introduced by Fix~\ref{fix1}:
+\begin{itemize}
+\item A conflict after $t_b+\Delta t_b$ between $a$ and a non-saved agent (either $b$ or other). 
+\item A conflict at $t_b$ or later between $b$ and a saved agent other than $a$.
+\end{itemize}
+
+The pseudo-code for the proposed post-processing stage is shown in Algorithm~\ref{alg1}. Lemma~\ref{l1} established that $t_b$ never decreases as a result of applying Fix~\ref{fix1}. Therefore, whenever Algorithm~\ref{alg1} terminates, no conflicts exist. It remains to establish that this algorithm terminates. 
+
+\begin{algorithm}[t!]
+\begin{algorithmic}[1]
+\caption{From Maximum Network Flow to Evacuation With a Time Limit.}
+\label{alg1}
+\STATE Generate the initial list of conflicts sorted by $t_b$.
+\FOR {$t_b$ {\bf from} 1 to $T$}
+\STATE Generate the list of conflicts at $t_b$.
+\WHILE {there are conflicts at $t_b$}
+\STATE Fix a conflict at $t_b$ between $a\notin S$ and $b\in S$.
+\STATE If a new conflict at $t_b$ between $b$ and a saved agent resulted, add this new conflict to the list of conflicts.
+\ENDWHILE
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+\Le{Algorithm~\ref{alg1} terminates after at most $T(|S|-1)$ applications of Fix~\ref{fix1}.}
+\begin{proof}
+Note that a non-saved agent $a\notin S$ can participate only in one fix at $t_b$. After that fix, it can conflict with a non-saved agent at $t_b+\Delta t_b + 1$ the earliest. Further fixes at time $t_b$ cannot result in a non-saved agent $c$ with which $a$ could conflict at time $t_b$, since $c$ would have to borrow its plan for $t_b$ from a saved agent, which requires a conflict at $t_b-1$ or earlier, which is impossible according to Lemma~\ref{l1}.
+
+%Suppose $\Delta t_b=0$ for all conflicts, so we can get as many fixes as possible.
+
+After each application of Fix~\ref{fix1}, one saved agent becomes non-saved. Since a non-saved agent $a\notin S$ can participate only in one fix at $t_b$, once the last of the originally (i.e. before any fix at $t_b$ was applied) saved agents becomes non-saved, no further fixes at $t_b$ are possible. Therefore, at most $|S|-1$ fixes are possible for each $t_b$, which establishes our claim.  
+\end{proof}
+\end{document}
