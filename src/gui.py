@@ -17,10 +17,11 @@ def computeFont(text, width, height):
         
 # The graphical interface
 class TkEvac:
-    def __init__(self, instance, solution, nSteps, stepTime):
+    def __init__(self, instance, simulation, nSteps, stepTime):
         self.instance = instance
-        self.solution = solution
-        self.paths = solution.expandedPaths
+        self.simulation = simulation
+        self.paths = simulation.paths
+        self.directions = simulation.directions
         self.nSteps = nSteps
         self.stepTime = stepTime
         self.tk = tk = Tk()
@@ -41,7 +42,7 @@ class TkEvac:
         self.buttonsWidth = width
         self.buttonsHeight = titleHeight = int(height * 0.1) 
         self.cellSize = min(width/instance.nColumns, layoutHeight/instance.nRows)
-        self.graphieSize = 0.8 * self.cellSize
+        self.graphieSize = 0.6 * self.cellSize
         
         buttons = []
         buttons.append(("stepForward", Button(tk, text="Step >", command=self.stepForward)))
@@ -52,9 +53,9 @@ class TkEvac:
         for i, (buttonName, button) in enumerate(buttons):
             button.place(x=i * buttonWidth, y = titleHeight)
         
-        self.titleFont = computeFont(self.computeTitleString(solution.longestPathLength-1, len(solution.paths)),
+        self.titleFont = computeFont(self.computeTitleString(simulation.timeThreshold, len(simulation.paths)),
                                      width, titleHeight)
-        self.agentFont = computeFont(str(len(solution.paths)-1), self.graphieSize, self.graphieSize)
+        self.agentFont = computeFont(str(len(simulation.paths)-1), self.graphieSize, self.graphieSize)
         self.exitFont = computeFont(str(len(instance.exits)-1), self.cellSize, self.cellSize)
         
         self.lastTime = 0
@@ -62,6 +63,28 @@ class TkEvac:
         self.drawTimeStep()
         #self.tk.update()
     
+    def drawDirection(self, cur, nxt):
+        if cur == nxt: return
+        cur_row, cur_column = self.instance.nodeToRC[cur]
+        next_row, next_column = self.instance.nodeToRC[nxt]
+        curX, curY = self.computeCenterXY(cur_row, cur_column)
+        if (next_row == cur_row + 1):
+            self.canvas.create_polygon(curX - self.graphieSize/2, curY + self.graphieSize/2,
+                                       curX + self.graphieSize/2, curY + self.graphieSize/2,
+                                       curX, curY + self.cellSize/2)
+        if (next_row == cur_row - 1):
+            self.canvas.create_polygon(curX - self.graphieSize/2, curY - self.graphieSize/2,
+                                       curX + self.graphieSize/2, curY - self.graphieSize/2,
+                                       curX, curY - self.cellSize/2)
+        if (next_column == cur_column + 1):
+            self.canvas.create_polygon(curX + self.graphieSize/2, curY - self.graphieSize/2,
+                                       curX + self.graphieSize/2, curY + self.graphieSize/2,
+                                       curX + self.cellSize/2, curY)
+        if (next_column == cur_column - 1):
+            self.canvas.create_polygon(curX - self.graphieSize/2, curY - self.graphieSize/2,
+                                       curX - self.graphieSize/2, curY + self.graphieSize/2,
+                                       curX - self.cellSize/2, curY)
+        
     def reset(self):
         self.lastTime = self.time
         self.time = 0
@@ -82,7 +105,7 @@ class TkEvac:
         #self.tk.update()
     
     def playForward(self):
-        while self.time < self.solution.longestPathLength - 1:
+        while self.time < self.simulation.timeThreshold - 1:
             self.lastTime = self.time
             self.time += 1
             self.drawTimeStep()
@@ -90,12 +113,17 @@ class TkEvac:
             self.tk.after(int(self.stepTime/2))
     
     def computeTitleString(self, time, saved):
-        res = "Time: " + str(time) + "(of " + str(self.solution.longestPathLength-1) + ")" + \
-        "   Saved: " + str(saved) +"(of " + str(len(self.solution.paths)) + ")"
+        res = "Time: " + str(time) + "(of " + str(self.simulation.timeThreshold) + ")" + \
+        "   Saved: " + str(saved) +"(of " + str(len(self.simulation.paths)) + ")"
         return res
+    
     def computeXY(self, row, column):
         cellSize = self.cellSize;
         return column * cellSize, self.titleHeight + self.buttonsHeight + row * cellSize
+    
+    def computeCenterXY(self, row, column):
+        cornerX, cornerY = self.computeXY(row, column)
+        return cornerX + self.cellSize/2, cornerY + self.cellSize/2
         
     def drawGrid(self, time):
         instance = self.instance; cellSize = self.cellSize; canvas = self.canvas
@@ -103,7 +131,7 @@ class TkEvac:
         for row in range(instance.nRows):
             for column in range(instance.nColumns):
                 cornerX, cornerY = self.computeXY(row, column)
-                centerX, centerY = cornerX + self.cellSize/2, cornerY + self.cellSize/2
+                centerX, centerY = self.computeCenterXY(row, column)
                 text = ""
                 try:
                     node = instance.rcToNode[(row, column)]
@@ -118,7 +146,7 @@ class TkEvac:
         for exit in instance.exits:
             row, column = instance.nodeToRC[exit]
             cornerX, cornerY = self.computeXY(row, column)
-            centerX, centerY = cornerX + self.cellSize/2, cornerY + self.cellSize/2
+            centerX, centerY = self.computeCenterXY(row, column)
             mySaved = self.nAgentsAtExit(exit, time)
             text = str(mySaved)
             saved += mySaved
@@ -133,7 +161,7 @@ class TkEvac:
         paths = self.paths
         res = 0
         for i in range(len(paths)):
-            if self.solution.expandedPaths[i][time] == e:
+            if self.simulation.paths[i][time] == e:
                 res += 1
         return res
     
@@ -151,12 +179,16 @@ class TkEvac:
                 if (curNode in instance.exits and step == nSteps):
                     continue
                 cornerX, cornerY = self.computeXY(row, column)
-                centerX, centerY = cornerX + self.cellSize/2, cornerY + self.cellSize/2
+                centerX, centerY = self.computeCenterXY(row, column)
                 lcornerX, lcornerY = self.computeXY(lrow, lcolumn)
-                lcenterX, lcenterY = lcornerX + self.cellSize/2, lcornerY + self.cellSize/2
+                lcenterX, lcenterY = self.computeCenterXY(lrow, lcolumn)
                 stepX = (centerX - lcenterX)/nSteps
                 stepY = (centerY - lcenterY)/nSteps
                 create_circle(canvas, lcenterX + int(step*stepX), lcenterY + int(step*stepY), self.graphieSize/2, {'fill': 'blue'})
+                if step == nSteps:
+                    try:
+                        self.drawDirection(curNode, self.directions[i][self.time])
+                    except: pass
                 canvas.create_text(lcenterX + int(step*stepX), lcenterY + int(step*stepY), text = str(i), fill="black", font = self.agentFont)
             self.drawExits(self.time if step == nSteps else self.lastTime)
             self.tk.update()
@@ -178,6 +210,8 @@ def main():
     import expandedNetwork
     import solveNetworkLIP
     import solution
+    import simulation
+    from policies import compliant
     
     if sys.argv[1:]:
         inputFileName = sys.argv[1]
@@ -185,18 +219,28 @@ def main():
         #inputFileName = '../instances/simplest.txt'
         #inputFileName = '../instances/two_lines.txt'
         inputFileName = '../instances/balancing.txt'
+    timeThreshold = 20 
     instance = instance.Instance(inputFileName)
-    network = expandedNetwork.ExpandedNetwork(instance, 20)
+       
+    network = expandedNetwork.ExpandedNetwork(instance, timeThreshold)
     print("Solving by MaxFlow (ignoring the hats)...")
     solution = solution.Solution(network.solveMaxFlow(), instance.exits) 
     solution.checkSolution(fixFlag = True)
-    #printPlan(instance, solution)
+    #printPlan(instance, simulation)
     solution.checkSolution()
-    #exit()
-    print("Showing the solution graphically...")
     
+    for i, policy in enumerate(instance.policies[:]):
+        if policy == 'c': 
+            instance.policies[i] = compliant.Compliant(solution.paths[i])
+            continue
+        print("An unknown policy " + str(policy))
+        
+    simulation = simulation.Simulation(instance, timeThreshold)
+
+
+    print("Showing the simulation graphically...")    
     # Create the graphical objects...
-    h = TkEvac(instance, solution, nSteps = 20, stepTime = 500)
+    h = TkEvac(instance, simulation, nSteps = 20, stepTime = 500)
     h.run()
 
 # Call main when run as script

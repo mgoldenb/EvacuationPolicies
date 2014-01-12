@@ -43,16 +43,17 @@ class Instance:
         
         self.exits = []
         self.agents = []
-        self.hats = []
+        self.policies = []
         for row, line in enumerate(file):
             for column, char in enumerate(line.strip()):
                 myNode = self.rcToNode[(row, column)]
                 if (char == '@'): 
                     self.graph.del_node(myNode)
                     self.rcToNode.pop((row, column))
-                if (char == 'e'): self.exits.append(myNode)
-                if (char == 'a' or char == 'h'): self.agents.append(myNode)
-                if (char == 'h'): self.hats.append(myNode)
+                if (char == '>'): self.exits.append(myNode)
+                if (char >= 'a' and char <= 'z'): 
+                    self.agents.append(myNode)
+                    self.policies.append(char)
         self.nNodes = len(self.graph.nodes())
         self.maxNodeID = max(self.graph.nodes())
         self.nAgents = len(self.agents) 
