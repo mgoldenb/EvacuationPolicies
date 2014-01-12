@@ -105,7 +105,7 @@ class TkEvac:
         #self.tk.update()
     
     def playForward(self):
-        while self.time < self.simulation.timeThreshold - 1:
+        while self.time < self.simulation.timeThreshold:
             self.lastTime = self.time
             self.time += 1
             self.drawTimeStep()
@@ -184,7 +184,8 @@ class TkEvac:
                 lcenterX, lcenterY = self.computeCenterXY(lrow, lcolumn)
                 stepX = (centerX - lcenterX)/nSteps
                 stepY = (centerY - lcenterY)/nSteps
-                create_circle(canvas, lcenterX + int(step*stepX), lcenterY + int(step*stepY), self.graphieSize/2, {'fill': 'blue'})
+                create_circle(canvas, lcenterX + int(step*stepX), lcenterY + int(step*stepY), self.graphieSize/2, 
+                              {'fill': self.instance.policies[i].color})
                 if step == nSteps:
                     try:
                         self.drawDirection(curNode, self.directions[i][self.time])
@@ -212,6 +213,7 @@ def main():
     import solution
     import simulation
     from policies import compliant
+    from policies import nearestExit
     
     if sys.argv[1:]:
         inputFileName = sys.argv[1]
@@ -232,6 +234,10 @@ def main():
     for i, policy in enumerate(instance.policies[:]):
         if policy == 'c': 
             instance.policies[i] = compliant.Compliant(solution.paths[i])
+            continue
+        if policy == 'n': 
+            instance.policies[i] = \
+            nearestExit.NearestExit(instance.graph, instance.exitDistances, instance.agents[i])
             continue
         print("An unknown policy " + str(policy))
         

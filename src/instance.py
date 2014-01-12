@@ -1,4 +1,6 @@
 from common import *
+from pygraph.algorithms.minmax import shortest_path
+
 class Instance:
     """ 
     Provides methods for working with the building layout
@@ -30,6 +32,13 @@ class Instance:
                 if row > 0: self.graph.add_edge((myNode, self.rcToNode[(row - 1, column )]))
                 if row < self.nRows - 1: self.graph.add_edge((myNode, self.rcToNode[(row + 1, column )])) 
     
+    def _computeExitDistances(self):
+        self.exitDistances = {node:INFINITY for node in self.graph.nodes()} 
+        for exit in self.exits:
+            _, myDistances = shortest_path(self.graph, exit)
+            self.exitDistances = {node: min(self.exitDistances[node], myDistance) 
+                                  for node, myDistance in myDistances.items()}    
+    
     def __init__(self, fileName):
         self.graph = digraph()
         self.nodeToCoords = {}
@@ -58,3 +67,4 @@ class Instance:
         self.maxNodeID = max(self.graph.nodes())
         self.nAgents = len(self.agents) 
         #random.shuffle(self.agents)
+        self._computeExitDistances()
