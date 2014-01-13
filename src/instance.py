@@ -5,16 +5,16 @@ class Instance:
     """ 
     Provides methods for working with the building layout
     Members:
-        graph -- the underlying graph
-        nNodes -- number of nodes in the graph
-        maxNodeID -- maximal node ID
-        nodeToRC -- map of grid coordinates (row, column)
-        rcToNode -- reverse map
-        maxRow, maxColumn, nRows, nColumns
-        exits -- list of exits
-        agents -- initial locations of all agents
-        nAgents -- number of agents (including hats)
-        hats -- initial locations of agents that have to be saved
+    graph -- the underlying graph
+    nNodes -- number of nodes in the graph
+    maxNodeID -- maximal node ID
+    nodeToRC -- map of grid coordinates (row, column)
+    rcToNode -- reverse map
+    maxRow, maxColumn, nRows, nColumns
+    exits -- list of exits
+    agents -- initial locations of all agents
+    nAgents -- number of agents (including hats)
+    hats -- initial locations of agents that have to be saved
     """
     def _makeCompleteGrid(self):
         nodeID = 0

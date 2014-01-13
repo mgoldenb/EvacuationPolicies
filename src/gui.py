@@ -1,3 +1,5 @@
+
+"""The main module of the evacuation project."""
 from tkinter import *
 import tkinter.font as tkfont
 
@@ -17,7 +19,22 @@ def computeFont(text, width, height):
         
 # The graphical interface
 class TkEvac:
+    """The class for graphical representation of the simulation
+
+    :cvar nSteps: The number of time steps
+    :cvar directions: The list of directions dictated by the agent policies
+    """
+
     def __init__(self, instance, simulation, nSteps, stepTime):
+        """
+        :param instance: the input instance   
+        :type instance: Instance
+        :param simulation: a simulation object
+        :type simulation: Simulation
+        :returns: no return value
+        :rtype: no type
+        """
+
         self.instance = instance
         self.simulation = simulation
         self.paths = simulation.paths
@@ -64,6 +81,15 @@ class TkEvac:
         #self.tk.update()
     
     def drawDirection(self, cur, nxt):
+        """Parameters of the constructor:
+
+        :param instance: the input instance   
+        :type instance: Instance
+        :param simulation: a simulation object
+        :type simulation: Simulation
+        :returns: no return value
+        :rtype: no type
+        """
         if cur == nxt: return
         cur_row, cur_column = self.instance.nodeToRC[cur]
         next_row, next_column = self.instance.nodeToRC[nxt]
