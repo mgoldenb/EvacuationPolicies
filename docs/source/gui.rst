@@ -3,6 +3,6 @@
 .. moduleauthor:: Meir Goldenberg <mgoldenbe@gmail.com>
 
 .. automodule:: gui
- 
-.. autoclass:: TkEvac
    :members:
+
+.. autodata:: config_aaa

@@ -3,6 +3,9 @@
 from tkinter import *
 import tkinter.font as tkfont
 
+#: descr
+config_aaa = 5
+
 def create_circle(canvas, x, y, r, fill):
     return canvas.create_oval(x-r, y-r, x+r, y+r, fill)
 
@@ -21,18 +24,19 @@ def computeFont(text, width, height):
 class TkEvac:
     """The class for graphical representation of the simulation
 
-    :cvar nSteps: The number of time steps
-    :cvar directions: The list of directions dictated by the agent policies
+    :ivar layoutHeight: height in pixels of the simulation screen
+    :type layoutHeight: int
     """
 
     def __init__(self, instance, simulation, nSteps, stepTime):
         """
-        :param instance: the input instance   
-        :type instance: Instance
-        :param simulation: a simulation object
-        :type simulation: Simulation
-        :returns: no return value
-        :rtype: no type
+        :param instance: an object of class :class:`instance.Instance`  
+        :param simulation: an object of class :class:`simulation.Simulation`  
+        :param nSteps: the number of steps in the movie effect per move
+        :type nSteps: int
+        :param stepTime: the time that showing a step will take in the Play mode 
+        :type stepTime: int
+        :returns: nothing
         """
 
         self.instance = instance
@@ -53,7 +57,7 @@ class TkEvac:
         self.canvas = canvas = Canvas(tk, width = width, height = height)
         canvas.pack()
         
-        self.layoutHeight = layoutHeight = int(height * 0.8)
+        self.layoutHeight = layoutHeight = int(height * 0.8) 
         self.titleWidth = titleWidth = width
         self.titleHeight = titleHeight = int(height * 0.1)
         self.buttonsWidth = width
