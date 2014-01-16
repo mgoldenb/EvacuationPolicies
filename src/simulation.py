@@ -12,6 +12,7 @@ class Simulation:
         self.directions = [[] for agent in agents]
     
         for time in range(1, timeThreshold + 1):
+            self.resolutionDecisions = {}
             self.processConflicts(time)
             policyChanged = False
             for i in range(len(agents)):
@@ -56,7 +57,12 @@ class Simulation:
                     nConflicts += 1
                     if type == "Collision":
                         if i_cur == i_wants or j_cur == j_wants: continue
-                        if random.randint(False, True):
+                        try: 
+                            winner = self.resolutionDecisions[(i,j)] 
+                        except:
+                            winner = (i if random.randint(False, True) else j)
+                        self.resolutionDecisions[(i,j)] = self.resolutionDecisions[(j,i)] = winner
+                        if winner == j:
                             successFlags[i] = False
                             break
                         else:
