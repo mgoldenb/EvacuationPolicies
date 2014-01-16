@@ -43,6 +43,7 @@ class TkEvac:
         self.simulation = simulation
         self.paths = simulation.paths
         self.directions = simulation.directions
+        self.colors = simulation.colors
         self.nSteps = nSteps
         self.stepTime = stepTime
         self.tk = tk = Tk()
@@ -214,8 +215,10 @@ class TkEvac:
                 lcenterX, lcenterY = self.computeCenterXY(lrow, lcolumn)
                 stepX = (centerX - lcenterX)/nSteps
                 stepY = (centerY - lcenterY)/nSteps
-                create_circle(canvas, lcenterX + int(step*stepX), lcenterY + int(step*stepY), self.graphieSize/2, 
-                              {'fill': self.instance.policies[i].color})
+                try: create_circle(canvas, lcenterX + int(step*stepX), lcenterY + int(step*stepY), self.graphieSize/2, 
+                              {'fill': self.colors[i][self.time]})
+                except:
+                    pass
                 if step == nSteps:
                     try:
                         self.drawDirection(curNode, self.directions[i][self.time])
@@ -251,7 +254,8 @@ def main():
         #inputFileName = '../instances/simplest.txt'
         #inputFileName = '../instances/two_lines.txt'
         inputFileName = '../instances/balancing.txt'
-    timeThreshold = 20 
+        #inputFileName = '../instances/balancing_simple.txt'
+    timeThreshold = 20
     instance = instance.Instance(inputFileName)
        
     network = expandedNetwork.ExpandedNetwork(instance, timeThreshold)
@@ -263,7 +267,7 @@ def main():
     
     for i, policy in enumerate(instance.policies[:]):
         if policy == 'c': 
-            instance.policies[i] = compliant.Compliant(solution.paths[i])
+            instance.policies[i] = compliant.Compliant(solution.paths[i], instance.graph, instance.exitDistances)
             continue
         if policy == 'n': 
             instance.policies[i] = \

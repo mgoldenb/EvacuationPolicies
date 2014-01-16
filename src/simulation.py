@@ -8,28 +8,41 @@ class Simulation:
         self.policies = policies = instance.policies
         self.timeThreshold = timeThreshold
         self.paths = paths = [[agent] for agent in agents]
+        self.colors = colors = [[policy.color] for policy in policies]
         self.directions = [[] for agent in agents]
     
         for time in range(1, timeThreshold + 1):
-            self._successFlags = successFlags = [True] * len(agents)
-            self._curs = [paths[i][time-1] for i in range(len(agents))]
-            self._wants = [policies[i].next() for i in range(len(agents))]
-            self.processConflicts(time, "Collision")
-            while True:
-                nConflicts = self.processConflicts(time, "IntoWaiting")
-                if nConflicts == 0: break
+            self.processConflicts(time)
+            policyChanged = False
             for i in range(len(agents)):
                 self.directions[i].append(self._wants[i])
-                if successFlags[i]:
+                if not self._successFlags[i]:
+                    if (policies[i].negativeFeedback(changeAllowedFlag = True)):
+                        policyChanged = True
+            if policyChanged: 
+                self.processConflicts(time)
+                
+            for i in range(len(agents)):
+                colors[i].append(policies[i].color)
+                if self._successFlags[i]:
                     paths[i].append(self._wants[i])
-                    policies[i].feedback(True)
+                    policies[i].positiveFeedback()
                 else:
                     paths[i].append(self._curs[i])
-                    policies[i].feedback(False) 
-                 
-    def processConflicts(self, time, type):
+                    policies[i].negativeFeedback(changeAllowedFlag = False) 
+    
+    def processConflicts(self, time):
+        self._successFlags = successFlags = [True] * len(self.agents)
+        self._curs = [self.paths[i][time-1] for i in range(len(self.agents))]
+        self._wants = [self.policies[i].next() for i in range(len(self.agents))]
+        self.processTypedConflicts(time, "Collision")
+        while True:
+            nConflicts = self.processTypedConflicts(time, "IntoWaiting")
+            if nConflicts == 0: break
+            
+    def processTypedConflicts(self, time, type):
         nConflicts = 0
-        successFlags = self._successFlags; 
+        successFlags = self._successFlags
         agents = self.agents; 
         for i in range(len(agents)):
             i_cur = self._curs[i]
