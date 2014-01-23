@@ -253,9 +253,22 @@ def main():
     else: # if running as script
         #inputFileName = '../instances/simplest.txt'
         #inputFileName = '../instances/two_lines.txt'
-        inputFileName = '../instances/balancing.txt'
+        
+        #inputFileName = '../instances/balancing.txt'
+        #timeThreshold = 20
+        
         #inputFileName = '../instances/balancing_simple.txt'
-    timeThreshold = 20
+        #timeThreshold = 5
+        
+        #inputFileName = '../instances/conflict_pays.txt'
+        #timeThreshold = 15
+        
+        inputFileName = '../instances/counter_example_s.txt'
+        timeThreshold = 14
+        
+        #inputFileName = '../instances/bug.txt'
+        #timeThreshold = 14
+    
     instance = instance.Instance(inputFileName)
        
     network = expandedNetwork.ExpandedNetwork(instance, timeThreshold)
@@ -266,7 +279,10 @@ def main():
     solution.checkSolution()
     
     for i, policy in enumerate(instance.policies[:]):
-        if policy == 'c': 
+        if policy == 'c': # compliant no matter what
+            instance.policies[i] = compliant.Compliant(solution.paths[i])
+            continue
+        if policy == 's': # compliant, but switches to nearest exit if cannot be compliant
             instance.policies[i] = compliant.Compliant(solution.paths[i], instance.graph, instance.exitDistances)
             continue
         if policy == 'n': 
