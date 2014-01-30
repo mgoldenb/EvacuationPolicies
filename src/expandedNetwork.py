@@ -75,6 +75,10 @@ class ExpandedNetwork:
     @timing
     def solveMaxFlow(self):
         instance = self.instance
+        print("The graph's md5: " + strToMD5(str(self.graph)))
+        print("The capacities md5: " + strToMD5(str(self.capacities)))
+        print("The md5: " + strToMD5(str(self.graph) + str(self.capacities)))
+        exit(1)
         flow, _ = maximum_flow(self.graph, sourceID, sinkID, self.capacities)
         # form the reduced network in which only arcs with flow are present
         reducedNetwork = digraph()

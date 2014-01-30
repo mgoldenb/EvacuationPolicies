@@ -31,7 +31,8 @@ class Simulation:
                 else:
                     paths[i].append(self._curs[i])
                     policies[i].negativeFeedback(changeAllowedFlag = False) 
-    
+        self.nSaved = sum((1 if path[-1] in instance.exits else 0) for path in paths)
+        
     def processConflicts(self, time):
         self._successFlags = successFlags = [True] * len(self.agents)
         self._curs = [self.paths[i][time-1] for i in range(len(self.agents))]

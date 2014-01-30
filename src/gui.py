@@ -1,5 +1,6 @@
 
 """The main module of the evacuation project."""
+from common import *
 from tkinter import *
 import tkinter.font as tkfont
 
@@ -249,55 +250,68 @@ def main():
     from policies import nearestExit
     
     if sys.argv[1:]:
-        inputFileName = sys.argv[1]
+        inputSourceinputFileName = sys.argv[1]
     else: # if running as script
-        #inputFileName = '../instances/simplest.txt'
-        #inputFileName = '../instances/two_lines.txt'
+        #inputSource = '../instances/simplest.txt'
+        #inputSource = '../instances/two_lines.txt'
         
-        #inputFileName = '../instances/balancing.txt'
+        #inputSource = '../instances/balancing.txt'
         #timeThreshold = 20
         
-        #inputFileName = '../instances/balancing_simple.txt'
-        #timeThreshold = 5
+        inputSource = '../instances/balancing_simple.txt'
+        timeThreshold = 5
         
-        #inputFileName = '../instances/conflict_pays.txt'
+        #inputSource = '../instances/conflict_pays.txt'
         #timeThreshold = 15
         
-        inputFileName = '../instances/counter_example_s.txt'
-        timeThreshold = 14
-        
-        #inputFileName = '../instances/bug.txt'
-        #timeThreshold = 14
+        #inputSource = '../instances/counter_example/changing_policy.txt'
+        #inputSource = '../instances/counter_example/'
+        #timeThreshold = 19
     
-    instance = instance.Instance(inputFileName)
-       
-    network = expandedNetwork.ExpandedNetwork(instance, timeThreshold)
-    print("Solving by MaxFlow (ignoring the hats)...")
-    solution = solution.Solution(network.solveMaxFlow(), instance.exits) 
-    solution.checkSolution(fixFlag = True)
-    #printPlan(instance, simulation)
-    solution.checkSolution()
-    
-    for i, policy in enumerate(instance.policies[:]):
-        if policy == 'c': # compliant no matter what
-            instance.policies[i] = compliant.Compliant(solution.paths[i])
-            continue
-        if policy == 's': # compliant, but switches to nearest exit if cannot be compliant
-            instance.policies[i] = compliant.Compliant(solution.paths[i], instance.graph, instance.exitDistances)
-            continue
-        if policy == 'n': 
-            instance.policies[i] = \
-            nearestExit.NearestExit(instance.graph, instance.exitDistances, instance.agents[i])
-            continue
-        print("An unknown policy " + str(policy))
+    batchMode = (True if inputSource[-1]=='/' else False)
+    inputFileNames = (glob.glob(inputSource + "*.txt") if batchMode else [inputSource])
+    inputFileNames.sort()
+    if batchMode:
+        try:
+            inputFileNames = inputFileNames[sum(1 for _ in open(inputSource + "results.out")):]
+        except:
+            pass
+    if batchMode:
+        output = open(inputSource + "results.out", mode='a')
+    #print([os.path.basename(inputFileName) for inputFileName in inputFileNames])
+    #exit(1)
+    for inputFileName in inputFileNames:
+        instance = instance.Instance(inputFileName)
+           
+        network = expandedNetwork.ExpandedNetwork(instance, timeThreshold)
+        print("Solving by MaxFlow (ignoring the hats)...")
+        solution = solution.Solution(network.solveMaxFlow(), instance.exits) 
+        solution.checkSolution(fixFlag = True)
+        #printPlan(instance, simulation)
+        solution.checkSolution()
         
-    simulation = simulation.Simulation(instance, timeThreshold)
-
-
-    print("Showing the simulation graphically...")    
-    # Create the graphical objects...
-    h = TkEvac(instance, simulation, nSteps = 20, stepTime = 500)
-    h.run()
+        for i, policy in enumerate(instance.policies[:]):
+            if policy == 'c': # compliant no matter what
+                instance.policies[i] = compliant.Compliant(solution.paths[i])
+                continue
+            if policy == 's': # compliant, but switches to nearest exit if cannot be compliant
+                instance.policies[i] = compliant.Compliant(solution.paths[i], instance.graph, instance.exitDistances)
+                continue
+            if policy == 'n': 
+                instance.policies[i] = \
+                nearestExit.NearestExit(instance.graph, instance.exitDistances, instance.agents[i])
+                continue
+            print("An unknown policy " + str(policy))
+            
+        simulation = simulation.Simulation(instance, timeThreshold)
+    
+        if batchMode:
+            print(os.path.basename(inputFileName) + " " + str(simulation.nSaved), file=output)
+        else:
+            print("Showing the simulation graphically...")    
+            # Create the graphical objects...
+            h = TkEvac(instance, simulation, nSteps = 20, stepTime = 500)
+            h.run()
 
 # Call main when run as script
 if __name__ == '__main__':
