@@ -258,15 +258,15 @@ def main():
         #inputSource = '../instances/balancing.txt'
         #timeThreshold = 20
         
-        inputSource = '../instances/balancing_simple.txt'
-        timeThreshold = 5
+        #inputSource = '../instances/balancing_simple.txt'
+        #timeThreshold = 5
         
         #inputSource = '../instances/conflict_pays.txt'
         #timeThreshold = 15
         
         #inputSource = '../instances/counter_example/changing_policy.txt'
-        #inputSource = '../instances/counter_example/'
-        #timeThreshold = 19
+        inputSource = '../instances/counter_example/'
+        timeThreshold = 19
     
     batchMode = (True if inputSource[-1]=='/' else False)
     inputFileNames = (glob.glob(inputSource + "*.txt") if batchMode else [inputSource])
@@ -282,10 +282,23 @@ def main():
     #exit(1)
     for inputFileName in inputFileNames:
         instance = instance.Instance(inputFileName)
-           
-        network = expandedNetwork.ExpandedNetwork(instance, timeThreshold)
-        print("Solving by MaxFlow (ignoring the hats)...")
-        solution = solution.Solution(network.solveMaxFlow(), instance.exits) 
+        storedSolutionFileName = '../storedSolutions/' + strToMD5(instance.makeCanonicalDataStructure())
+        try:
+            storedSolution = open(storedSolutionFileName)
+            import ast
+            print("Found a ready solution!")
+            # the following works for now
+            # need to be careful when paths of agents aren't ordered 
+            # according to the agents' current location
+            maxFlowPaths = [ast.literal_eval(myStr) for myStr in storedSolution]
+        except: 
+            print("Solving by MaxFlow...")
+            network = expandedNetwork.ExpandedNetwork(instance, timeThreshold)
+            maxFlowPaths = network.solveMaxFlow()
+            storedSolutionFile = open(storedSolutionFileName, mode='w')
+            for path in maxFlowPaths:
+                print(path, file = storedSolutionFile)
+        solution = solution.Solution(maxFlowPaths, instance.exits) 
         solution.checkSolution(fixFlag = True)
         #printPlan(instance, simulation)
         solution.checkSolution()
@@ -312,6 +325,7 @@ def main():
             # Create the graphical objects...
             h = TkEvac(instance, simulation, nSteps = 20, stepTime = 500)
             h.run()
+    print("Script Done!")
 
 # Call main when run as script
 if __name__ == '__main__':

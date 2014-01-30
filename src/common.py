@@ -4,14 +4,15 @@ import time
 import operator
 import glob
 import os
+import json
 import hashlib
 sys.path.append('/usr/local/lib/python3.3/dist-packages/python_graph_core-1.8.2-py3.3.egg')
 from pygraph.classes.digraph import digraph
 
 random.seed(1001)
 
-def strToMD5(mystr):
-    return hashlib.md5(mystr.encode('utf-8')).hexdigest()
+def strToMD5(data):
+    return hashlib.md5(json.dumps(data, sort_keys=True).encode('utf-8')).hexdigest()
 
 def timing(f):
     def wrap(*args):

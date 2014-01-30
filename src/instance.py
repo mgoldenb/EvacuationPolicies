@@ -68,3 +68,10 @@ class Instance:
         self.nAgents = len(self.agents) 
         #random.shuffle(self.agents)
         self._computeExitDistances()
+        
+    def makeCanonicalDataStructure(self):
+        myNodes = self.graph.nodes(); myNodes.sort()
+        myEdges = self.graph.edges(); myEdges.sort()
+        myExits = self.exits; myExits.sort()
+        myAgents = self.agents; myAgents.sort
+        return [myNodes, myEdges, myExits, myAgents]
