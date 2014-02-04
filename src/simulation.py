@@ -31,7 +31,10 @@ class Simulation:
                 else:
                     paths[i].append(self._curs[i])
                     policies[i].negativeFeedback(changeAllowedFlag = False) 
-        self.nSaved = sum((1 if path[-1] in instance.exits else 0) for path in paths)
+            self.nSaved = sum((1 if path[-1] in instance.exits else 0) for path in paths)
+            if self.nSaved == instance.nAgents:
+                self.timeThreshold = time
+                break
         
     def processConflicts(self, time):
         self._successFlags = successFlags = [True] * len(self.agents)

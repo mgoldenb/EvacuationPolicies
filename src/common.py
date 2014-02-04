@@ -11,7 +11,7 @@ from pygraph.classes.digraph import digraph
 
 random.seed(1001)
 
-def strToMD5(data):
+def dataToMD5(data):
     return hashlib.md5(json.dumps(data, sort_keys=True).encode('utf-8')).hexdigest()
 
 def timing(f):
