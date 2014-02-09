@@ -65,7 +65,7 @@ class Experiment:
 
 def main():
     if sys.argv[1:]:
-        inputSourceinputFileName = sys.argv[1]
+        inputSource = sys.argv[1]
     else: # if running as script
         #inputSource = '../instances/simplest.txt'
         #inputSource = '../instances/two_lines.txt'
@@ -79,16 +79,20 @@ def main():
         #inputSource = '../instances/conflict_pays.txt'
         #timeThreshold = 15
         
-        inputSource = '../instances/counter_example/changing_policy.txt'
-        #inputSource = '../instances/counter_example/'
-        timeThreshold = 19
+        #inputSource = '../instances/counter_example/changing_policy.txt'
+        #timeThreshold = 19
+        
+        inputSource = '../instances/ready/'
+        
     
     batchMode = (True if inputSource[-1]=='/' else False)
     inputFileNames = (glob.glob(inputSource + "*.txt") if batchMode else [inputSource])
     inputFileNames.sort()
+    nPastExperiments = 0
+    curExperiment = -1
     if batchMode:
         try:
-            inputFileNames = inputFileNames[sum(1 for _ in open(inputSource + "results.out")):]
+            nPastExperiments = sum(1 for _ in open(inputSource + "results.out"))
         except:
             pass
     if batchMode:
@@ -96,16 +100,31 @@ def main():
     #print([os.path.basename(inputFileName) for inputFileName in inputFileNames])
     #exit(1)
     for inputFileName in inputFileNames:
+        shortFileName = os.path.basename(inputFileName)
         random.seed(1001)
         nearestExperiment = Experiment(inputFileName, substitutePolicies = 'n')
         baseTime = nearestExperiment.simulation.timeThreshold
         timeThresholds = [int(percentage * baseTime/100) for percentage in [100, 90, 80, 70]]
         for timeThreshold in timeThresholds:
+            print("\nMap: " + shortFileName + "   Threshold: " + str(timeThreshold))
+            curExperiment += 1
+            if curExperiment < nPastExperiments:
+                continue
             myExperiment = Experiment(inputFileName, timeThreshold = timeThreshold)
             if batchMode:
-                print(os.path.basename(inputFileName) + " " + str(myExperiment.simulation.nSaved), file=output)
+                outputString = ""
+                outputString += " " + shortFileName[:shortFileName.index('-')] # map name
+                outputString += " " + str(myExperiment.instance.nAgents)
+                # append the number of non-compliant agents
+                ncIndex = shortFileName.index('NC')+3
+                outputString += " " + shortFileName[ncIndex:shortFileName.index('-',ncIndex)]
+                instanceIndex = shortFileName.index('-I')+2
+                outputString += " " + shortFileName[instanceIndex:shortFileName.index('.',instanceIndex)]
+                outputString += " " + str(timeThreshold)
+                outputString += " " + str(myExperiment.simulation.nSaved)
+                print(outputString, file=output)
             else:
-                print("OUTPUT: " + os.path.basename(inputFileName) + " " + str(myExperiment.simulation.nSaved))
+                print("OUTPUT: " + outputString)
                 continue
                 print("Showing the simulation graphically...")    
                 # Create the graphical objects...

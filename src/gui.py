@@ -87,15 +87,6 @@ class TkEvac:
         #self.tk.update()
     
     def drawDirection(self, cur, nxt):
-        """Parameters of the constructor:
-
-        :param instance: the input instance   
-        :type instance: Instance
-        :param simulation: a simulation object
-        :type simulation: Simulation
-        :returns: no return value
-        :rtype: no type
-        """
         if cur == nxt: return
         cur_row, cur_column = self.instance.nodeToRC[cur]
         next_row, next_column = self.instance.nodeToRC[nxt]
